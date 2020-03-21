@@ -52,18 +52,17 @@ userSchema.pre("save", function(next) {
   });
 });
 
-userSchema.methods.comparePassword = (plainPassword, cb) => {
-  bcrypt.compare(plainPassword, userSchema.password, (err, isMatch) => {
+userSchema.methods.comparePassword = function(plainPassword, cb) {
+  bcrypt.compare(plainPassword, this.password, function(err, isMatch) {
     if (err) return cb(err);
-
     cb(null, isMatch);
   });
 };
 
-userSchema.methods.generateToken = cb => {
-  let token = jwt.sign(userSchema._id.toHexString(), "mysecret");
-  userSchema.token = token;
-  userSchema.save((err, user) => {
+userSchema.methods.generateToken = function(cb) {
+  let token = jwt.sign(this._id.toHexString(), "mysecret");
+  this.token = token;
+  this.save((err, user) => {
     if (err) return cb(err);
 
     cb(null, user);
@@ -72,7 +71,7 @@ userSchema.methods.generateToken = cb => {
 
 userSchema.statics.findByToken = function(token, cb) {
   // user id + mysecret = token , thr4 token - mysecret = user id
-  jwt.verify(token, "mysecret", function(err, decode) {
+  jwt.verify(token, "secret", (err, decode) => {
     this.findOne({ _id: decode, token: token }, function(err, user) {
       if (err) return cb(err);
       cb(null, user);

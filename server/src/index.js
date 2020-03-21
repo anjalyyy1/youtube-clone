@@ -4,9 +4,13 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const { User } = require("./models/user");
 const { auth } = require("./middleware/auth");
+const config = require("./config/keys");
 
+const port = process.env.PORT || 5000; // port set by heroku
 // configure port
-app.listen(5000);
+app.listen(port, () => {
+  console.log(`Server running at ${port}`);
+});
 
 // db connections
 const mongoose = require("mongoose");
@@ -49,10 +53,10 @@ app.post("/api/users/register", (req, res) => {
   const user = new User(req.body);
 
   user.save((err, doc) => {
-    console.log(err, "is the err");
     if (err) return res.json({ success: false, err });
     return res.status(200).json({
-      success: true
+      success: true,
+      message: "User registered successfully"
     });
   });
 });
@@ -67,7 +71,8 @@ app.post("/api/user/login", (req, res) => {
         message: "User not found"
       });
 
-    User.comparePassword(req.body.password, (err, isMatch) => {
+    user.comparePassword(req.body.password, (err, isMatch) => {
+      console.log(req.body.password, "is the plain pwd");
       if (!isMatch) {
         return res.json({
           login: false,
@@ -75,7 +80,7 @@ app.post("/api/user/login", (req, res) => {
         });
       }
 
-      User.generateToken((err, user) => {
+      user.generateToken((err, user) => {
         if (err) return res.status(400).send(err);
 
         // if success put tht token into a cookie
@@ -88,4 +93,22 @@ app.post("/api/user/login", (req, res) => {
       });
     });
   });
+});
+
+app.get("/api/user/logout", auth, (req, res) => {
+  User.findOneAndUpdate(
+    { _id: req.user._id },
+    { token: "", tokenExp: "" },
+    (err, doc) => {
+      if (err)
+        return res.json({
+          success: false,
+          err
+        });
+
+      return res.status(200).send({
+        success: true
+      });
+    }
+  );
 });

@@ -1,5 +1,6 @@
 const { User } = require("../models/user");
 
+//Middleware functions are functions that have access to the request object (req), the response object (res), and the next middleware function in the application’s request-response cycle. The next middleware function is commonly denoted by a variable named next.
 let auth = (req, res, next) => {
   let token = req.cookies.x_auth;
 
